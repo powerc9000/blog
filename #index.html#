@@ -1,0 +1,39 @@
+<html>
+    <head>
+        <title>
+        </title>
+    </head>
+    <body>
+        <div id="conent" />
+    <script src="markdown.min.js"></script>
+    <script>
+
+     getGist("e6cc071544c32a6650ae", function(content){
+       console.log(content);
+     });
+     
+     function getGist(gistId, cb){
+       Get("https://api.github.com/gists/"+gistId, function(res){
+         var response = JSON.parse(res.target.responseText).files;
+         var keys = Object.keys(response);
+         var file = response[keys[0]];
+         var content = file.content;
+
+         cb(content);
+         
+       });
+     }
+     
+     function Get(url, cb){
+       var XHR = new XMLHttpRequest();
+
+       XHR.open("get", url);
+       XHR.addEventListener("load", function(res){
+         cb(res);
+       });
+       XHR.send();
+      
+     }
+    </script>
+    </body>
+  </html>

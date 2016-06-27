@@ -4,13 +4,16 @@ var md = require("markdown-it");
 var urlParser = require("url");
 var handlebars = require("handlebars");
 var highlight = require("highlight.js");
+var q = require("q");
 var posts = fs.readFileSync("posts.json").toString();
 var baseURL = "https://api.github.com";
 var postTemplate = fs.readFileSync("post.template.html").toString();
 var indexTemplate = fs.readFileSync("index.template.html").toString();
 var template = handlebars.compile(postTemplate);
 var postList = [];
-var markdown = new md({
+var markdown = new md("commonmark", {
+  html: true,
+  typographer: true,
   highlight: function (str, lang) {
     console.log("trying to highlight", lang)
     if (lang && highlight.getLanguage(lang)) {
@@ -24,15 +27,19 @@ var markdown = new md({
     return ''; // use external default escaping
   }
 });
-
+var postPromises = [];
 posts = JSON.parse(posts);
 posts.posts.reverse();
+
 posts.posts.forEach(function(postID, index){
   var path = baseURL+"/gists/"+postID;
+  var promise = q.defer();
+  postPromises.push(promise.promise);
   Get(path, function(res){
     var files = Object.keys(res.files);
     var fileName = files[0];
     var html = markdown.render(res.files[fileName].content);
+    console.log(html);
     var result = template({
       post_title: res.description,
       post_content: html
@@ -40,14 +47,16 @@ posts.posts.forEach(function(postID, index){
     var savedName = res.description.replace(/ /g, "_").toLowerCase();
     var savedPath = "posts/"+savedName+".html";
     fs.writeFileSync(savedPath, result);
-    postList.push({
+    var postResult = {
       title: res.description,
       link: savedPath
-    });
-    if(index+1 === posts.posts.length){
-      buildIndexHTML(postList);
     }
+    promise.resolve(postResult);
   });
+});
+
+q.all(postPromises).then((posts)=>{
+  buildIndex(postList);
 });
 
 function buildIndexHTML(postList){
