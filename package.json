@@ -1,0 +1,23 @@
+{
+  "name": "blog",
+  "version": "1.0.0",
+  "description": "It's my nth iteration on a blog",
+  "main": ".#builder.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/powerc9000/blog.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/powerc9000/blog/issues"
+  },
+  "homepage": "https://github.com/powerc9000/blog#readme",
+  "dependencies": {
+    "handlebars": "^4.0.5",
+    "markdown": "^0.5.0"
+  }
+}
