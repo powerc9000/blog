@@ -18,6 +18,8 @@
   "homepage": "https://github.com/powerc9000/blog#readme",
   "dependencies": {
     "handlebars": "^4.0.5",
-    "markdown": "^0.5.0"
+    "highlight.js": "^9.4.0",
+    "markdown": "^0.5.0",
+    "markdown-it": "^7.0.0"
   }
 }

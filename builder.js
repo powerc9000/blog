@@ -1,28 +1,43 @@
 var fs = require("fs");
 var https = require("https");
-var markdown = require("markdown");
+var md = require("markdown-it");
 var urlParser = require("url");
 var handlebars = require("handlebars");
+var highlight = require("highlight.js");
 var posts = fs.readFileSync("posts.json").toString();
 var baseURL = "https://api.github.com";
 var postTemplate = fs.readFileSync("post.template.html").toString();
 var indexTemplate = fs.readFileSync("index.template.html").toString();
 var template = handlebars.compile(postTemplate);
 var postList = [];
+var markdown = new md({
+  highlight: function (str, lang) {
+    console.log("trying to highlight", lang)
+    if (lang && highlight.getLanguage(lang)) {
+      try {
+        return '<pre class="hljs"><code>' +
+               highlight.highlight(lang, str, true).value +
+               '</code></pre>'
+      } catch (__) { console.log(__)}
+    }
 
+    return ''; // use external default escaping
+  }
+});
 
 posts = JSON.parse(posts);
+posts.posts.reverse();
 posts.posts.forEach(function(postID, index){
   var path = baseURL+"/gists/"+postID;
   Get(path, function(res){
     var files = Object.keys(res.files);
     var fileName = files[0];
-    var html = markdown.parse(res.files[fileName].content);
+    var html = markdown.render(res.files[fileName].content);
     var result = template({
       post_title: res.description,
       post_content: html
     });
-    var savedName = res.description.replace(" ", "_").toLowerCase();
+    var savedName = res.description.replace(/ /g, "_").toLowerCase();
     var savedPath = "posts/"+savedName+".html";
     fs.writeFileSync(savedPath, result);
     postList.push({
