@@ -39,7 +39,6 @@ posts.posts.forEach(function(postID, index){
     var files = Object.keys(res.files);
     var fileName = files[0];
     var html = markdown.render(res.files[fileName].content);
-    console.log(html);
     var result = template({
       post_title: res.description,
       post_content: html
@@ -56,12 +55,17 @@ posts.posts.forEach(function(postID, index){
 });
 
 q.all(postPromises).then((posts)=>{
-  buildIndex(postList);
+  console.log(posts);
+  buildIndexHTML(posts);
+}).catch((e)=>{
+  console.log(e);
 });
 
 function buildIndexHTML(postList){
+ 
   var index = handlebars.compile(indexTemplate);
   var indexHTML = index({posts: postList});
+
   fs.writeFileSync("index.html", indexHTML);
 }
 
