@@ -43,18 +43,18 @@ GLOBAL.__PROD__ = <span class="hljs-literal">true</span>;
 </code></pre>
 <p>So the problem is:</p>
 <p>I want to have flags for the code without manually having to edit files for releases.</p>
-<p>I came up with a solution I am okay with for right now.
-I start with a <code>globals.js</code> file and include that in my <code>index.ios.js</code> and <code>index.android.js</code> files.
-Then I made files for each of the different enviroments I wanted to support. <code>globals_dev.js</code> <code>globals_qa.js</code> <code>globals_prod.js</code>
-all with the 3 flags I want in correctly set eg for <code>globals_qa.js</code></p>
+<p>I came up with a solution I am okay with for right now.</p>
+<p>I start with a <code>globals.js</code> file and include that in my <code>index.ios.js</code> and <code>index.android.js</code> files.</p>
+<p>Then I made files for each of the different enviroments I wanted to support. <code>globals_dev.js</code> <code>globals_qa.js</code> <code>globals_prod.js</code></p>
+<p>All with the 2 flags I want in correctly set eg for <code>globals_qa.js</code></p>
 <pre class="hljs"><code>GLOBAL.__QA__ = <span class="hljs-literal">true</span>;
 GLOBAL.__PROD__ = <span class="hljs-literal">false</span>;
 </code></pre>
-<p>Then when I go to create a build for anything I concat the correct <code>globals_x.js</code> into <code>globals.js</code> to set all the flags to the values I wanted.
-It looks something like this.</p>
+<p>Then when I go to create a build for anything I concat the correct <code>globals_x.js</code> into <code>globals.js</code> to set all the flags to the values I wanted.</p>
+<p>It looks something like this.</p>
 <pre class="hljs"><code>cat globals_x.js &gt; globals.js
 </code></pre>
-<p>So my make instruction for qa might look something like this. (remember I want QA to be a production build with 1 flag set)</p>
+<p>So my Makefile instruction for qa might look something like this. (remember I want QA to be a production build with 1 flag set)</p>
 <p>(I also made custom builder and uploader scripts for iOS but ill save that for a later post)</p>
 <pre><code class="language-make">QA:
   cat globals_dev.js &gt; globals.js
