@@ -27,8 +27,8 @@ GLOBAL.__PROD__ = <span class="hljs-literal">true</span>;
 ...
 <span class="hljs-meta">#<span class="hljs-meta-keyword">endif</span></span>
 </code></pre>
-<p>and then you can switch your flags on and off from command line with <code>gcc file.cpp -D SOME_FLAG=1</code>
-A a side note I make use of defines in my <code>AppDelegate.m</code> so I don't have to comment out code for production or release.</p>
+<p>and then you can switch your flags on and off from command line with <code>gcc file.cpp -D SOME_FLAG=1</code></p>
+<p>As side note I make use of defines in my <code>AppDelegate.m</code> so I don't have to comment out code for production or release.</p>
 <pre class="hljs"><code><span class="hljs-meta">#if defined(DEBUG)</span>
   jsCodeLocation = [<span class="hljs-built_in">NSURL</span> URLWithString:<span class="hljs-string">@"http://127.0.0.1:8081/index.ios.bundle?platform=ios&amp;dev=true"</span>];
 <span class="hljs-meta">#else</span>
