@@ -3,9 +3,13 @@
         <title>
             Clay's Blog
         </title>
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
     </head>
     <body>
-        <h1>Posts</h1>
+      <div class="container">
+        <div><h1>Clay Murray's Blog <small>It's about programming, usually</small></h1></div>
+        <h2>Posts</h2>
         <ul>
             {{#each posts}}
             <li>
@@ -13,6 +17,7 @@
             </li>
             {{/each}}
         </ul>
+        </div>
     </body>
     
 </html>

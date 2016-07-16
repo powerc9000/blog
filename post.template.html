@@ -3,14 +3,21 @@
         <title>
             {{post_title}}
         </title>
-<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0/styles/tomorrow-night-eighties.min.css">
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0/styles/tomorrow-night-eighties.min.css">
     </head>
     <body>
+      <div class="container">
         <div>
             <a href="/">Home</a>
         </div>
         <div>
+          <h1>{{post_title}}</h1>
+          </div>
+        <div>
             {{{post_content}}}
+        </div>
         </div>
     </body>
 </html>

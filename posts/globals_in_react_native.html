@@ -3,12 +3,18 @@
         <title>
             Globals In React Native
         </title>
-<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0/styles/tomorrow-night-eighties.min.css">
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0/styles/tomorrow-night-eighties.min.css">
     </head>
     <body>
+      <div class="container">
         <div>
             <a href="/">Home</a>
         </div>
+        <div>
+          <h1>Globals In React Native</h1>
+          </div>
         <div>
             <p>Recently I ran into a problem in React Native.</p>
 <p>I wanted to be able to have more granular control of my build besides React Native's <code>__DEV__</code>.</p>
@@ -56,13 +62,14 @@ GLOBAL.__PROD__ = <span class="hljs-literal">false</span>;
 </code></pre>
 <p>So my Makefile instruction for qa might look something like this. (remember I want QA to be a production build with 1 flag set)</p>
 <p>(I also made custom builder and uploader scripts for iOS but ill save that for a later post)</p>
-<pre><code class="language-make">QA:
+<pre class="hljs"><code><span class="hljs-section">QA:</span>
   cat globals_dev.js &gt; globals.js
   cd android &amp;&amp; ./gradlew assembleRelease
   ./scripts/build_ios.sh
 </code></pre>
 <p>BOOM now with this you can setup any enviroment you want with as many flags as you want to support!</p>
 
+        </div>
         </div>
     </body>
 </html>
