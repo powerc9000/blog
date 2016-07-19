@@ -1,5 +1,6 @@
 var fs = require("fs");
 var https = require("https");
+var moment = require("moment");
 var md = require("markdown-it");
 var urlParser = require("url");
 var handlebars = require("handlebars");
@@ -41,14 +42,17 @@ posts.posts.forEach(function(postID, index){
     var html = markdown.render(res.files[fileName].content);
     var result = template({
       post_title: res.description,
-      post_content: html
+      post_content: html,
+      created: moment(res.created_at).format("LL"),
+      modified: moment(res.modified_at).format("LLL")
     });
     var savedName = res.description.replace(/ /g, "_").toLowerCase();
     var savedPath = "posts/"+savedName+".html";
     fs.writeFileSync(savedPath, result);
     var postResult = {
       title: res.description,
-      link: savedPath
+      link: savedPath,
+      created: moment(res.created_at).format("LL"),
     }
     promise.resolve(postResult);
   });
