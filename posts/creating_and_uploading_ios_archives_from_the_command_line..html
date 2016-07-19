@@ -1,0 +1,89 @@
+<html>
+    <head>
+        <title>
+            Creating and uploading iOS archives from the command line.
+        </title>
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0/styles/tomorrow-night-eighties.min.css">
+    </head>
+    <body>
+      <div class="container">
+        <div>
+            <a href="/">Home</a>
+        </div>
+        <div>
+          <h1>Creating and uploading iOS archives from the command line.</h1>
+          </div>
+        <div>
+            <p>I don't like IDEs. I want to code in my editor and use the command line for everything else. I like the flow better and it feels faster to me.</p>
+<p>I also like to have one command to do several things I want to do.</p>
+<p>I don't want to open Xcode to create an archive, then open the archive window, then upload the archive to iTunes. It's slow and breaks my flow.</p>
+<p>Also, in react native, it's trivial to build Android releases on the command line. I want to create and upload both iOS and android from the command line.</p>
+<p>So after hours of searching the internet I found a flow I like for creating and uploading archives for iOS all from the command line</p>
+<h3>Creating the archive</h3>
+<pre class="hljs"><code>xcodebuild archive -scheme &lt;scheme-name&gt; -project &lt;your-project&gt;.xcodeproj -configuration &lt;Relase|Debug|Test&gt; -archivePath &lt;<span class="hljs-built_in">where</span>-you-want-to-save-your-archive&gt; &amp;&amp; 
+xcodebuild -exportArchive -archivePath &lt;<span class="hljs-built_in">where</span>-you-saved-the-archive&gt; -exportPath &lt;ipa-output&gt;.ipa -exportFormat ipa -exportProvisioningProfile &lt;your-provisioning-profile-name&gt;
+</code></pre>
+<p>This should create an ipa in whatever path you specified with <code>-exportPath</code></p>
+<h3>Uploading the archive</h3>
+<pre class="hljs"><code><span class="hljs-meta">#!/bin/bash</span>
+<span class="hljs-comment">#set -ex</span>
+
+<span class="hljs-comment"># This scripts allows you to upload a binary to the iTunes Connect Store and do it for a specific app_id</span>
+<span class="hljs-comment"># Because when you have multiple apps in status for download, xcodebuild upload will complain that multiple apps are in wait status</span>
+
+<span class="hljs-comment"># Requires application loader to be installed</span>
+<span class="hljs-comment"># See https://developer.apple.com/library/ios/documentation/LanguagesUtilities/Conceptual/iTunesConnect_Guide/Chapters/SubmittingTheApp.html</span>
+<span class="hljs-comment"># Itunes Connect username &amp; password</span>
+<span class="hljs-comment"># I store my username and password in a seprate file outside the repo. With the format `username password`</span>
+USER=$(awk <span class="hljs-string">'BEGIN {FS=" "}; {print $1}'</span> ../keys/itunes)
+PASS=$(awk <span class="hljs-string">'BEGIN {FS=" "}; {print $2}'</span> ../keys/itunes)
+
+<span class="hljs-comment"># App id as in itunes store create, not in your developeßr account</span>
+APP_ID=<span class="hljs-string">'&lt;your-app-id&gt;'</span>
+
+
+IPA_FILE=<span class="hljs-variable">$1</span>
+IPA_FILENAME=$(basename <span class="hljs-variable">$IPA_FILE</span>)
+MD5=$(md5 -q <span class="hljs-variable">$IPA_FILE</span>)
+BYTESIZE=$(<span class="hljs-built_in">stat</span> <span class="hljs-_">-f</span> <span class="hljs-string">"%z"</span> <span class="hljs-variable">$IPA_FILE</span>)
+
+TEMPDIR=temp
+<span class="hljs-comment"># Remove previous temp</span>
+<span class="hljs-built_in">test</span> <span class="hljs-_">-d</span> <span class="hljs-variable">${TEMPDIR}</span> &amp;&amp; rm -rf <span class="hljs-variable">${TEMPDIR}</span>
+mkdir <span class="hljs-variable">${TEMPDIR}</span>
+mkdir <span class="hljs-variable">${TEMPDIR}</span>/mybundle.itmsp
+
+<span class="hljs-comment"># You can see this debug info when you manually do an app upload with the Application Loader</span>
+<span class="hljs-comment"># It's when you click activity</span>
+
+cat &lt;&lt;EOM &gt; <span class="hljs-variable">${TEMPDIR}</span>/mybundle.itmsp/metadata.xml
+&lt;?xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"UTF-8"</span>?&gt;
+&lt;package version=<span class="hljs-string">"software4.7"</span> xmlns=<span class="hljs-string">"http://apple.com/itunes/importer"</span>&gt;
+    &lt;software_assets apple_id=<span class="hljs-string">"<span class="hljs-variable">$APP_ID</span>"</span>&gt;
+        &lt;asset <span class="hljs-built_in">type</span>=<span class="hljs-string">"bundle"</span>&gt;
+            &lt;data_file&gt;
+                &lt;file_name&gt;<span class="hljs-variable">$IPA_FILENAME</span>&lt;/file_name&gt;
+                &lt;checksum <span class="hljs-built_in">type</span>=<span class="hljs-string">"md5"</span>&gt;<span class="hljs-variable">$MD5</span>&lt;/checksum&gt;
+                &lt;size&gt;<span class="hljs-variable">$BYTESIZE</span>&lt;/size&gt;
+            &lt;/data_file&gt;
+        &lt;/asset&gt;
+    &lt;/software_assets&gt;
+&lt;/package&gt;
+EOM
+
+cp <span class="hljs-variable">${IPA_FILE}</span> <span class="hljs-variable">$TEMPDIR</span>/mybundle.itmsp
+
+/Applications/Xcode.app/Contents/Applications/Application\ Loader.app/Contents/itms/bin/iTMSTransporter -m upload <span class="hljs-_">-f</span> <span class="hljs-variable">${TEMPDIR}</span> -u <span class="hljs-string">"<span class="hljs-variable">$USER</span>"</span> -p <span class="hljs-string">"<span class="hljs-variable">$PASS</span>"</span> -v detailed
+
+<span class="hljs-built_in">test</span> <span class="hljs-_">-d</span> <span class="hljs-variable">${TEMPDIR}</span> &amp;&amp; rm -rf <span class="hljs-variable">${TEMPDIR}</span>
+</code></pre>
+<p>Usage: <code>./itunes_upload.sh &lt;path-to-ipa&gt;</code></p>
+<p>With this setup you never have to touch xcode to build and upload your iOS archives.</p>
+<p>What's great about this is, as long as you have your build setup you can use this for any iOS project you create.</p>
+
+        </div>
+        </div>
+    </body>
+</html>
