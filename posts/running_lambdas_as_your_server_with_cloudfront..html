@@ -1,0 +1,60 @@
+<html>
+    <head>
+        <title>
+            Running lambdas as your server with cloudfront.
+        </title>
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0/styles/tomorrow-night-eighties.min.css">
+    </head>
+    <body>
+      <div class="container">
+        <div>
+            <a href="/">Home</a>
+        </div>
+        <div>
+            <h1>Running lambdas as your server with cloudfront.</h1>
+            <div>January 11, 2017</div>
+          </div>
+        <div>
+            <p>So recently in my work I have wanted to pre-render some of our pages and then keep the cached version in cloudwatch.</p>
+<p>There are a few options in doing this.</p>
+<p>You can set up an EC2 instance. Or use ECS.</p>
+<p>However, what if you don't want to pay to have and EC2 instance running all the time. You have a budget!</p>
+<p>Enter lambdas. AWS lambdas can be created to run based on events. Sadly you can't directly integrate with lambda from cloudwatch (except for lambda@edge but that is a different use case). This isn't too hard AWS even has a nice article on it for us. http://docs.aws.amazon.com/apigateway/latest/developerguide/getting-started.html</p>
+<p>But API gateway is normally setup for sending JSON. For our use case we just want to pre-render our HTML when cloudfront doesn't have it in cache.</p>
+<p>A few changes will have to be made. First off in API gateway we want to proxy all requests to lambda.
+<img src="http://i.imgur.com/fArbvTF.png" alt="create the lambda" /></p>
+<p>Now in our lambda when we return our data we need to tell API gateway it is text/html</p>
+<pre class="hljs"><code>exports.handler = (event, context, callback) =&gt;{
+  <span class="hljs-comment">//Do our pre-rendering</span>
+  callback(<span class="hljs-literal">null</span>, {
+    statusCode: <span class="hljs-number">200</span>,
+    body: preRenderedBody,
+    headers:{
+      <span class="hljs-string">"Content-Type"</span>: <span class="hljs-string">"text/html"</span>
+    }
+  })
+}
+</code></pre>
+<p>Back to API gateway again. We need to set our response header as <code>text/html</code> as well. The model doesn't much matter.</p>
+<p><img src="http://imgur.com/yNw0zDo" alt="set stuff" /></p>
+<p>Not super hard so far but it did take some figuring out so I thought I would put it all in one place.</p>
+<p>But we have one more thing we want to do. Put cloudfront in front of it.</p>
+<p>So you'll want to go to cloudfront and create a distribution.</p>
+<p><img src="http://imgur.com/dhPgpM7.png" alt="create distribution" /></p>
+<p>In <code>Origin Domain Name</code> you will want to put the domain name of the API gateway you created.</p>
+<p><code>Origin Path</code> should be the stage you created for your API gateway. eg <code>/prod</code></p>
+<p>The rest of the settings can be set to your liking. One word of caution. Do not forward the host header to API gateway it will break things.</p>
+<p>We don't want API gateway to handle all files just the main page. If we are storing all our files in s3 we can create another origin for those.</p>
+<p>So after creating our distribution, go into it and Click on the tab <code>Origins</code> so we can add our s3 as one. The process is the same as the first origin we created above. Except if you just click in the box it will give you a dropdown of s3 buckets you can choose.</p>
+<p>Now after we have our two origins we have to setup a new behaviour to handle it.</p>
+<p>Our API gateway is going to handle <code>/</code> and we want s3 to serve anything else.</p>
+<p><img src="http://imgur.com/mlET1q6.png" alt="behaviour" /></p>
+<p>Using <code>/?*</code> tells cloudfront to use any path with one or more characters to path to our s3 bucket.</p>
+<p>These should be all the steps. Questions and comments can be directed to @powerc9000 on twitter.</p>
+
+        </div>
+        </div>
+    </body>
+</html>
