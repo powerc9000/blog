@@ -1,0 +1,91 @@
+<html>
+    <head>
+        <title>
+            Automating Lambda Deployment With Travis-CI
+        </title>
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0/styles/tomorrow-night-eighties.min.css">
+        <style>
+img{
+    max-width:100%;
+    margin:10px;
+}
+        </style>
+    </head>
+    <body>
+      <div class="container">
+        <div>
+            <a href="/">Home</a>
+        </div>
+        <div>
+            <h1>Automating Lambda Deployment With Travis-CI</h1>
+            <div>January 11, 2017</div>
+          </div>
+        <div>
+            <p>I really hate doing things myself when I can have a computer do it for me.</p>
+<p>So In this post I will describe how I automate lambda deployment with travis-ci.</p>
+<p>Create a AWS role that has these permissions.</p>
+<pre class="hljs"><code>{
+    <span class="hljs-attr">"Version"</span>: <span class="hljs-string">"2012-10-17"</span>,
+    <span class="hljs-attr">"Statement"</span>: [
+        {
+            <span class="hljs-attr">"Effect"</span>: <span class="hljs-string">"Allow"</span>,
+            <span class="hljs-attr">"Action"</span>: [
+                <span class="hljs-string">"lambda:*"</span>
+            ],
+            <span class="hljs-attr">"Resource"</span>: [
+                <span class="hljs-string">"*"</span>
+            ]
+        }
+    ]
+}
+</code></pre>
+<p>I wanted to lock down the permissions more but you basically need them all.</p>
+<p>Get an access key for this role.</p>
+<p>Second add your repo to travis. It's easy I won't tell you how to do it.</p>
+<p>Now we create a <code>.travis.yml</code> file.</p>
+<pre class="hljs"><code><span class="hljs-attr">language:</span> node_js
+<span class="hljs-attr">node_js:</span>
+<span class="hljs-bullet">-</span> <span class="hljs-string">'4.3'</span>
+<span class="hljs-attr">env:</span>
+<span class="hljs-attr">  global:</span>
+<span class="hljs-bullet">  -</span> AWS_ACCESS_KEY_ID=YOUR_ACCESS_KEY_ID
+<span class="hljs-bullet">  -</span> AWS_DEFAULT_REGION=us-east<span class="hljs-bullet">-1</span>
+<span class="hljs-attr">branches:</span>
+<span class="hljs-attr">  only:</span>
+<span class="hljs-bullet">  -</span> master
+<span class="hljs-attr">before_install:</span>
+<span class="hljs-bullet">-</span> pip install --user awscli
+<span class="hljs-bullet">-</span> export PATH=$PATH:$HOME/.local/bin
+<span class="hljs-attr">script:</span> make build
+</code></pre>
+<p>Here we add our AWS key id to the file. We'll also want to add our secret key but we want to encrypt it. Using the travis CLI</p>
+<p><code>travis encrypt AWS_SECRET_ACCESS_KEY=YOUR_SECRET_ACCESS_KEY --add env.global</code></p>
+<p>We should be set on the travis side.</p>
+<p>Now onto building and uploading</p>
+<p>Here is my make file for building</p>
+<pre><code class="language-make">.PHONY: build clean upload
+build:
+	npm install --only=production
+	zip -r code.zip . -x *.git*
+
+clean:
+	if [ -a code.zip ]; then rm code.zip; fi
+
+upload: build
+	./upload.sh
+</code></pre>
+<p>here is my upload.sh</p>
+<pre class="hljs"><code><span class="hljs-meta">#!/bin/bash</span>
+aws lambda update-function-code \
+--zip-file=fileb://code.zip \
+--region=us-east-1 \
+--function-name=NAME_OF_YOUR_LAMBDA
+</code></pre>
+<p>Now everytime you push to master it should update your lambda to the newest code!</p>
+
+        </div>
+        </div>
+    </body>
+</html>
