@@ -32,12 +32,12 @@ img{
 <p>A few changes will have to be made. First off in API gateway we want to proxy all requests to lambda.
 <img src="http://i.imgur.com/fArbvTF.png" alt="create the lambda" /></p>
 <p>Now in our lambda when we return our data we need to tell API gateway it is text/html</p>
-<pre class="hljs"><code>exports.handler = (event, context, callback) =&gt;{
+<pre class="hljs"><code>exports.handler = <span class="hljs-function">(<span class="hljs-params">event, context, callback</span>) =&gt;</span>{
   <span class="hljs-comment">//Do our pre-rendering</span>
   callback(<span class="hljs-literal">null</span>, {
-    statusCode: <span class="hljs-number">200</span>,
-    body: preRenderedBody,
-    headers:{
+    <span class="hljs-attr">statusCode</span>: <span class="hljs-number">200</span>,
+    <span class="hljs-attr">body</span>: preRenderedBody,
+    <span class="hljs-attr">headers</span>:{
       <span class="hljs-string">"Content-Type"</span>: <span class="hljs-string">"text/html"</span>
     }
   })
