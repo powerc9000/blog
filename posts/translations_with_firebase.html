@@ -1,0 +1,128 @@
+<html>
+    <head>
+        <title>
+            Translations with Firebase
+        </title>
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0/styles/tomorrow-night-eighties.min.css">
+        <style>
+img{
+    max-width:100%;
+    margin:10px;
+}
+        </style>
+    </head>
+    <body>
+      <div class="container">
+        <div>
+            <a href="/">Home</a>
+        </div>
+        <div>
+            <h1>Translations with Firebase</h1>
+            <div>February 7, 2017</div>
+          </div>
+        <div>
+            <p>At my place of work we were doing translations with json files and key value pairs.</p>
+<p>eg. <code>en-US.json</code></p>
+<pre><code>{
+  &quot;this_key&quot;: &quot;Translates to this&quot;
+}
+</code></pre>
+<p>This is really nice and simple, nothing <em>really</em> wrong with it. It does have a few downsides though.
+It can be annoying to get translations from people who know the language. Typically we would convert the json to csv and give them that.
+Then you would have to get the csv and turn it back into json.</p>
+<p>You have to do a release every time you want to change translations. Most our sites using these translations are simple static sites running on s3.
+However it takes developer time and effort that could be better spent doing something else.</p>
+<p>In wanting to improve this system I decided to use firebase's realtime database to store and edit our translations instead.
+I created a frontend for it that makes it easy for other employees who may know the language but not the code to make edits to the language for us
+It saves developer time not having to manage translations and releases for them.
+Changes show up instantly on the site.</p>
+<p>The structure of the data in firebase looks something like this</p>
+<pre><code>{
+  &quot;dev&quot;:{
+    &quot;site1&quot;:{
+      &quot;en-US&quot;:{
+        &quot;key&quot;:&quot;value&quot;
+      }
+    }
+  },
+  &quot;live&quot;:{}
+}
+</code></pre>
+<p>Now we have storage by evironment/application/language
+The reason to have different enviroments was so if you made a stupid mistake like deleting an entire language you could back it up from live again.
+I also added some rules to firebase to allow only certain people to update the live keys.</p>
+<p>Looks something like this</p>
+<pre><code>{
+  &quot;rules&quot;: {
+    &quot;.read&quot;: &quot;true&quot;,
+      &quot;dev&quot;:{
+        &quot;.write&quot;: &quot;auth != null&quot;
+      },
+	    &quot;live&quot;:{
+        &quot;.write&quot;: &quot;auth.permissions.writeToLive === true&quot;
+      }
+  }
+}
+</code></pre>
+<p>This allows anyone to read (which is what want) but only certain people to edit live. These permission come from using custom auth with firebase.
+(I'll write up on how to do that tomorrow!)</p>
+<p>I won't go into much detail about how to get items from firebase becasue it is very well documented on their site and elsewhere.
+However I will say it's very easy to get whatever language you want with a simple ref</p>
+<pre class="hljs"><code><span class="hljs-comment">//Add some code to conditionally set your env.</span>
+<span class="hljs-keyword">var</span> env = <span class="hljs-string">"dev"</span>
+<span class="hljs-keyword">var</span> app = <span class="hljs-string">"some app"</span> <span class="hljs-comment">//This could be hard-coded]</span>
+<span class="hljs-keyword">var</span> language = <span class="hljs-string">"en-US"</span> <span class="hljs-comment">//Also have code to set your language</span>
+<span class="hljs-comment">// I use `once` here because I don't want the overhead of querying firebase for changes all the time</span>
+<span class="hljs-comment">// When we really dont need it.</span>
+<span class="hljs-keyword">return</span> firebase.database().ref(<span class="hljs-string">`<span class="hljs-subst">${env}</span>/<span class="hljs-subst">${app}</span>/<span class="hljs-subst">${language}</span>).once("value").then((snap)=&gt;{
+ //All your data is here
+ return snap.val();
+});
+</span></code></pre>
+<p>We use angular for several of our apps.
+If you also use the <a href="https://angular-translate.github.io/">angular translate library</a> it's easy to get setup using a custom loader</p>
+<p>Config</p>
+<pre class="hljs"><code><span class="hljs-comment">//...</span>
+.config(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">$stateProvider, $urlRouterProvider, $translateProvider</span>) </span>{
+    $urlRouterProvider.otherwise(<span class="hljs-string">'/home'</span>);
+    $translateProvider.useLocalStorage();
+    $translateProvider.useSanitizeValueStrategy();
+    $translateProvider.useLoader(<span class="hljs-string">"Translate"</span>)
+<span class="hljs-comment">//...</span>
+</code></pre>
+<p>Factory</p>
+<pre class="hljs"><code><span class="hljs-comment">//...</span>
+.factory(<span class="hljs-string">"Translate"</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>)</span>{
+<span class="hljs-keyword">var</span> env;
+<span class="hljs-keyword">var</span> app;
+<span class="hljs-comment">//Fill in these values yourself!</span>
+<span class="hljs-keyword">var</span> config = {
+    <span class="hljs-attr">apiKey</span>: <span class="hljs-string">""</span>,
+    <span class="hljs-attr">authDomain</span>: <span class="hljs-string">""</span>,
+    <span class="hljs-attr">databaseURL</span>: <span class="hljs-string">""</span>,
+    <span class="hljs-attr">storageBucket</span>:<span class="hljs-string">""</span>
+    messagingSenderId: <span class="hljs-string">""</span>
+  };
+  firebase.initializeApp(config);
+  <span class="hljs-keyword">if</span>(<span class="hljs-built_in">window</span>.env === <span class="hljs-string">"prod"</span>){
+    env = <span class="hljs-string">"live"</span>;
+  }
+  <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">options</span>)</span>{
+    <span class="hljs-keyword">var</span> key;
+    <span class="hljs-comment">//Angular translate is stupid and uses `_` where we want `-`</span>
+    <span class="hljs-keyword">var</span> parts = options.key.split(<span class="hljs-string">"_"</span>);
+    key = parts[<span class="hljs-number">0</span>] + <span class="hljs-string">"-"</span> + parts[<span class="hljs-number">1</span>].toUpperCase();
+    <span class="hljs-keyword">return</span> e.database().ref(<span class="hljs-string">`<span class="hljs-subst">${env}</span>/<span class="hljs-subst">${app}</span>/<span class="hljs-subst">${key}</span>`</span>).once(<span class="hljs-string">"value"</span>).then(<span class="hljs-function">(<span class="hljs-params">snap</span>)=&gt;</span>{
+      <span class="hljs-keyword">return</span> snap.val()
+    });
+  }
+})
+</code></pre>
+<p>have fun.</p>
+
+        </div>
+        </div>
+    </body>
+</html>
