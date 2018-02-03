@@ -54,11 +54,11 @@ APP_ID=<span class="hljs-string">'&lt;your-app-id&gt;'</span>
 IPA_FILE=<span class="hljs-variable">$1</span>
 IPA_FILENAME=$(basename <span class="hljs-variable">$IPA_FILE</span>)
 MD5=$(md5 -q <span class="hljs-variable">$IPA_FILE</span>)
-BYTESIZE=$(<span class="hljs-built_in">stat</span> <span class="hljs-_">-f</span> <span class="hljs-string">"%z"</span> <span class="hljs-variable">$IPA_FILE</span>)
+BYTESIZE=$(<span class="hljs-built_in">stat</span> -f <span class="hljs-string">"%z"</span> <span class="hljs-variable">$IPA_FILE</span>)
 
 TEMPDIR=temp
 <span class="hljs-comment"># Remove previous temp</span>
-<span class="hljs-built_in">test</span> <span class="hljs-_">-d</span> <span class="hljs-variable">${TEMPDIR}</span> &amp;&amp; rm -rf <span class="hljs-variable">${TEMPDIR}</span>
+<span class="hljs-built_in">test</span> -d <span class="hljs-variable">${TEMPDIR}</span> &amp;&amp; rm -rf <span class="hljs-variable">${TEMPDIR}</span>
 mkdir <span class="hljs-variable">${TEMPDIR}</span>
 mkdir <span class="hljs-variable">${TEMPDIR}</span>/mybundle.itmsp
 
@@ -82,9 +82,9 @@ EOM
 
 cp <span class="hljs-variable">${IPA_FILE}</span> <span class="hljs-variable">$TEMPDIR</span>/mybundle.itmsp
 
-/Applications/Xcode.app/Contents/Applications/Application\ Loader.app/Contents/itms/bin/iTMSTransporter -m upload <span class="hljs-_">-f</span> <span class="hljs-variable">${TEMPDIR}</span> -u <span class="hljs-string">"<span class="hljs-variable">$USER</span>"</span> -p <span class="hljs-string">"<span class="hljs-variable">$PASS</span>"</span> -v detailed
+/Applications/Xcode.app/Contents/Applications/Application\ Loader.app/Contents/itms/bin/iTMSTransporter -m upload -f <span class="hljs-variable">${TEMPDIR}</span> -u <span class="hljs-string">"<span class="hljs-variable">$USER</span>"</span> -p <span class="hljs-string">"<span class="hljs-variable">$PASS</span>"</span> -v detailed
 
-<span class="hljs-built_in">test</span> <span class="hljs-_">-d</span> <span class="hljs-variable">${TEMPDIR}</span> &amp;&amp; rm -rf <span class="hljs-variable">${TEMPDIR}</span>
+<span class="hljs-built_in">test</span> -d <span class="hljs-variable">${TEMPDIR}</span> &amp;&amp; rm -rf <span class="hljs-variable">${TEMPDIR}</span>
 </code></pre>
 <p>Usage: <code>./itunes_upload.sh &lt;path-to-ipa&gt;</code></p>
 <p>With this setup you never have to touch xcode to build and upload your iOS archives.</p>

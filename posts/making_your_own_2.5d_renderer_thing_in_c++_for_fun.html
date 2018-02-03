@@ -1,0 +1,106 @@
+<html>
+    <head>
+        <title>
+            Making Your Own 2.5D Renderer Thing In C++ For Fun
+        </title>
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0/styles/tomorrow-night-eighties.min.css">
+        <style>
+img{
+    max-width:100%;
+    margin:10px;
+}
+        </style>
+    </head>
+    <body>
+      <div class="container">
+        <div>
+            <a href="/">Home</a>
+        </div>
+        <div>
+            <h1>Making Your Own 2.5D Renderer Thing In C++ For Fun</h1>
+            <div>February 3, 2018</div>
+          </div>
+        <div>
+            <p>So I like to program. And I guess I like the idea of making a game. I really haven't finised many.
+Previously most of my attempts have been in Javacript using canvas <a href="https://github.com/powerc9000/head-on.js">I made some library/engine thing</a> even.
+I mean it isn't very good is it?</p>
+<p>Anyway, I think writing low level code makes you cool. And I want to be cool like <a href="https://twitter.com/cmuratori">Casey Muratori</a> or <a href="https://twitter.com/Jonathan_Blow">Jonathan Blow</a>
+I also think old school engines like <a href="https://en.wikipedia.org/wiki/Build_(game_engine)">Build</a>, <a href="https://en.wikipedia.org/wiki/Doom_engine">Doom</a>, or <a href="http://fabiensanglard.net/Game_Engine_Black_Book_Release_Date/index.php">Wolfenstien 3D</a> are cool.
+Which makes me want to eschew all better ideas and do one similar to those.
+However, since I don't hate myself completely. I do use SDL for the platform layer.</p>
+<p>In the rest of this post I will go over some cool things I think I do.</p>
+<h2>Raycasting</h2>
+<p>I don't really want to explain what ray casting is. I just want to say what <em>I</em> do. It's probably stupid but I like it.</p>
+<p>Instead of just sending out a ray and following its path to see what it hits (I tried this). I do something a little different.
+I have a list of line segments that are the walls. They contain a start position, end position, texture index, and if they are transparent or not.
+For every ray I spit out (on each column of the screen) I also make a line segment the start is the player position and the end is some place like 2000 units away.
+Then every ray checks itself against every wall.
+Checking if it</p>
+<ol>
+<li>Hits the wall</li>
+<li>Where it hits the wall</li>
+</ol>
+<p>To know if a wall is already occulded I keep a buffer of every column and the largest height of the wall drawn there.
+If the height is smaller it doesn't get drawn.
+If the wall is transparent the drawing gets deffered until after all the rays have finished their checks then those walls are drawn back to front. Again checking the height buffer.</p>
+<p>In terms of rendering that's about what I have so far. Nothing too exciting but I think it's cool I even did it.
+I'm working on floors and ceilings now. It's pretty tough.</p>
+<h2>Hot reloading.</h2>
+<p>I learned this one from Casey Muratori. On his stream <a href="https://handmadehero.org/">Handmade Hero</a></p>
+<p>If you separate your game into two parts. A platform layer and game layer.
+You can compile your platform layer as an EXE and your game layer as a DLL.
+As long as the platform layer holds the gamestate and passes it to the game layer.
+Anytime the DLL is rebuilt you can reload it in your platform layer and see your code changes on the fly without having to close and reopen the exe.</p>
+<p>Here is my shitty SDL code to do that.</p>
+<p>Oh and, we copy the DLL to a temp file so our game doesn't keep a file lock on the DLL and keep us from reloading it.</p>
+<pre class="hljs"><code>		<span class="hljs-keyword">char</span> *LockFileName = <span class="hljs-string">"../build/lock.tmp"</span>;
+		<span class="hljs-keyword">char</span> *TempDLLName = <span class="hljs-string">"../build/temp.seville.dll"</span>;
+		<span class="hljs-keyword">char</span> *SourceDLLName = <span class="hljs-string">"../build/seville.dll"</span>;
+
+		stat(SourceDLLName, &amp;buff);
+		<span class="hljs-keyword">if</span>(modified &lt; buff.st_mtime){
+			<span class="hljs-keyword">if</span>(GameCodeDLL){
+				SDL_UnloadObject(GameCodeDLL);
+				UpdateAndRender = <span class="hljs-literal">NULL</span>;
+			}
+			SDL_RWops *f = SDL_RWFromFile(LockFileName, <span class="hljs-string">"rb"</span>);
+
+			<span class="hljs-keyword">if</span>(!f)
+			{
+				<span class="hljs-keyword">if</span>(!stb_copyfile(SourceDLLName, TempDLLName)){
+					err = SDL_GetError();
+				}
+
+				GameCodeDLL = SDL_LoadObject(TempDLLName);
+				<span class="hljs-keyword">if</span>(GameCodeDLL)
+				{
+					UpdateAndRender = (game_update_and_render *)
+						SDL_LoadFunction(GameCodeDLL, <span class="hljs-string">"GameUpdateAndRender"</span>);
+
+					modified = buff.st_mtime;
+				} <span class="hljs-keyword">else</span> {
+					<span class="hljs-keyword">int</span> var = <span class="hljs-number">1</span>+<span class="hljs-number">1</span>;
+					err = SDL_GetError();
+				}
+			}
+			<span class="hljs-keyword">if</span>(f){
+				SDL_RWclose(f);
+			}
+		}
+		<span class="hljs-keyword">if</span>(UpdateAndRender){
+
+			UpdateAndRender(Renderer, keysHeld, &amp;state);
+		} <span class="hljs-keyword">else</span> {
+			err = SDL_GetError();
+			<span class="hljs-keyword">int</span> var = <span class="hljs-number">1</span>+<span class="hljs-number">1</span>;
+		}
+</code></pre>
+<p>So that's where I'm at.</p>
+<p>If you have anything to say. I'm on twitter <a href="https://twitter.com/powerc9000">@powerc9000</a></p>
+
+        </div>
+        </div>
+    </body>
+</html>

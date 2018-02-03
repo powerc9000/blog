@@ -45,20 +45,20 @@ img{
 <p>Get an access key for this role.</p>
 <p>Second add your repo to travis. It's easy I won't tell you how to do it.</p>
 <p>Now we create a <code>.travis.yml</code> file.</p>
-<pre class="hljs"><code><span class="hljs-attr">language:</span> node_js
+<pre class="hljs"><code><span class="hljs-attr">language:</span> <span class="hljs-string">node_js</span>
 <span class="hljs-attr">node_js:</span>
 <span class="hljs-bullet">-</span> <span class="hljs-string">'4.3'</span>
 <span class="hljs-attr">env:</span>
 <span class="hljs-attr">  global:</span>
-<span class="hljs-bullet">  -</span> AWS_ACCESS_KEY_ID=YOUR_ACCESS_KEY_ID
-<span class="hljs-bullet">  -</span> AWS_DEFAULT_REGION=us-east<span class="hljs-bullet">-1</span>
+<span class="hljs-bullet">  -</span> <span class="hljs-string">AWS_ACCESS_KEY_ID=YOUR_ACCESS_KEY_ID</span>
+<span class="hljs-bullet">  -</span> <span class="hljs-string">AWS_DEFAULT_REGION=us-east-1</span>
 <span class="hljs-attr">branches:</span>
 <span class="hljs-attr">  only:</span>
-<span class="hljs-bullet">  -</span> master
+<span class="hljs-bullet">  -</span> <span class="hljs-string">master</span>
 <span class="hljs-attr">before_install:</span>
-<span class="hljs-bullet">-</span> pip install --user awscli
-<span class="hljs-bullet">-</span> export PATH=$PATH:$HOME/.local/bin
-<span class="hljs-attr">script:</span> make build
+<span class="hljs-bullet">-</span> <span class="hljs-string">pip</span> <span class="hljs-string">install</span> <span class="hljs-bullet">--user</span> <span class="hljs-string">awscli</span>
+<span class="hljs-bullet">-</span> <span class="hljs-string">export</span> <span class="hljs-string">PATH=$PATH:$HOME/.local/bin</span>
+<span class="hljs-attr">script:</span> <span class="hljs-string">make</span> <span class="hljs-string">build</span>
 </code></pre>
 <p>Here we add our AWS key id to the file. We'll also want to add our secret key but we want to encrypt it. Using the travis CLI</p>
 <p><code>travis encrypt AWS_SECRET_ACCESS_KEY=YOUR_SECRET_ACCESS_KEY --add env.global</code></p>
@@ -81,7 +81,7 @@ upload: build
 aws lambda update-function-code \
 --zip-file=fileb://code.zip \
 --region=us-east-1 \
---function-name=NAME_OF_YOUR_LAMBDA
+--<span class="hljs-keyword">function</span>-name=NAME_OF_YOUR_LAMBDA
 </code></pre>
 <p>Now everytime you push to master it should update your lambda to the newest code!</p>
 
